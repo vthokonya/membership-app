@@ -5,23 +5,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import zw.co.tayanasoft.data.SamplePerson;
-import zw.co.tayanasoft.data.SamplePersonRepository;
+import zw.co.tayanasoft.data.Member;
+import zw.co.tayanasoft.data.MemberRepository;
 
 @Service
-public class SamplePersonService {
+public class MemberService {
 
-    private final SamplePersonRepository repository;
+    private final MemberRepository repository;
 
-    public SamplePersonService(SamplePersonRepository repository) {
+    public MemberService(MemberRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<SamplePerson> get(Long id) {
+    public Optional<Member> get(Long id) {
         return repository.findById(id);
     }
 
-    public SamplePerson update(SamplePerson entity) {
+    public Member update(Member entity) {
         return repository.save(entity);
     }
 
@@ -29,11 +29,11 @@ public class SamplePersonService {
         repository.deleteById(id);
     }
 
-    public Page<SamplePerson> list(Pageable pageable) {
+    public Page<Member> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
-    public Page<SamplePerson> list(Pageable pageable, Specification<SamplePerson> filter) {
+    public Page<Member> list(Pageable pageable, Specification<Member> filter) {
         return repository.findAll(filter, pageable);
     }
 

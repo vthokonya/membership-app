@@ -10,12 +10,16 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -25,8 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import zw.co.tayanasoft.data.SamplePerson;
-import zw.co.tayanasoft.services.SamplePersonService;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import zw.co.tayanasoft.data.Member;
+import zw.co.tayanasoft.services.MemberService;
 import zw.co.tayanasoft.views.MainLayout;
 
 @PageTitle("Member Form")
@@ -35,12 +40,15 @@ import zw.co.tayanasoft.views.MainLayout;
 @Uses(Icon.class)
 public class MemberFormView extends Composite<VerticalLayout> {
 
+    private Member member;
+
+    private final BeanValidationBinder<Member> binder;
     public MemberFormView() {
         VerticalLayout layoutColumn2 = new VerticalLayout();
         H3 h3 = new H3();
         FormLayout formLayout2Col = new FormLayout();
-        TextField textField = new TextField();
-        TextField textField2 = new TextField();
+        TextField firstName = new TextField();
+        TextField lastName = new TextField();
         DatePicker datePicker = new DatePicker();
         TextField textField3 = new TextField();
         EmailField emailField = new EmailField();
@@ -60,10 +68,10 @@ public class MemberFormView extends Composite<VerticalLayout> {
         DatePicker datePicker3 = new DatePicker();
         TextField textField10 = new TextField();
         H3 h33 = new H3();
-        Grid basicGrid = new Grid(SamplePerson.class);
+        Grid basicGrid = new Grid(Member.class);
         HorizontalLayout layoutRow = new HorizontalLayout();
-        Button buttonPrimary = new Button();
-        Button buttonSecondary = new Button();
+        Button saveButton = new Button();
+        Button cancelButton = new Button();
         getContent().setWidth("100%");
         getContent().getStyle().set("flex-grow", "1");
         getContent().setJustifyContentMode(JustifyContentMode.START);
@@ -74,8 +82,8 @@ public class MemberFormView extends Composite<VerticalLayout> {
         h3.setText("Personal Information");
         h3.setWidth("100%");
         formLayout2Col.setWidth("100%");
-        textField.setLabel("First Name");
-        textField2.setLabel("Last Name");
+        firstName.setLabel("First Name");
+        lastName.setLabel("Last Name");
         datePicker.setLabel("Date of Birth");
         textField3.setLabel("Phone Number");
         emailField.setLabel("Email");
@@ -119,16 +127,16 @@ public class MemberFormView extends Composite<VerticalLayout> {
         layoutRow.addClassName(Gap.MEDIUM);
         layoutRow.setWidth("100%");
         layoutRow.getStyle().set("flex-grow", "1");
-        buttonPrimary.setText("Save");
-        buttonPrimary.setWidth("min-content");
-        buttonPrimary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        buttonSecondary.setText("Cancel");
-        buttonSecondary.setWidth("min-content");
+        saveButton.setText("Save");
+        saveButton.setWidth("min-content");
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        cancelButton.setText("Cancel");
+        cancelButton.setWidth("min-content");
         getContent().add(layoutColumn2);
         layoutColumn2.add(h3);
         layoutColumn2.add(formLayout2Col);
-        formLayout2Col.add(textField);
-        formLayout2Col.add(textField2);
+        formLayout2Col.add(firstName);
+        formLayout2Col.add(lastName);
         formLayout2Col.add(datePicker);
         formLayout2Col.add(textField3);
         formLayout2Col.add(emailField);
@@ -150,8 +158,29 @@ public class MemberFormView extends Composite<VerticalLayout> {
         layoutColumn2.add(h33);
         layoutColumn2.add(basicGrid);
         layoutColumn2.add(layoutRow);
-        layoutRow.add(buttonPrimary);
-        layoutRow.add(buttonSecondary);
+        layoutRow.add(saveButton);
+        layoutRow.add(cancelButton);
+
+        binder = new BeanValidationBinder<>(Member.class);
+        binder.bindInstanceFields(this);
+
+        saveButton.addClickListener(e -> {
+            try{
+                if(this.member == null){
+                    this.member = new Member();
+                }
+                binder.writeBean(this.member);
+                memberService.update(this.member);
+
+            }catch (ObjectOptimisticLockingFailureException exception) {
+                Notification n = Notification.show(
+                        "Error updating the data. Somebody else has updated the record while you were making changes.");
+                n.setPosition(Notification.Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            } catch (ValidationException validationException) {
+                Notification.show("Failed to update the data. Check again that all values are valid");
+            }
+        });
     }
 
     record SampleItem(String value, String label, Boolean disabled) {
@@ -168,11 +197,11 @@ public class MemberFormView extends Composite<VerticalLayout> {
     }
 
     private void setGridSampleData(Grid grid) {
-        grid.setItems(query -> samplePersonService.list(
+        grid.setItems(query -> memberService.list(
                 PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
     }
 
     @Autowired()
-    private SamplePersonService samplePersonService;
+    private MemberService memberService;
 }

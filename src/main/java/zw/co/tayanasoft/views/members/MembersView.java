@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
-import zw.co.tayanasoft.data.SamplePerson;
-import zw.co.tayanasoft.services.SamplePersonService;
+import zw.co.tayanasoft.data.Member;
+import zw.co.tayanasoft.services.MemberService;
 import zw.co.tayanasoft.views.MainLayout;
 
 @PageTitle("Members")
@@ -42,12 +42,12 @@ import zw.co.tayanasoft.views.MainLayout;
 @Uses(Icon.class)
 public class MembersView extends Div {
 
-    private Grid<SamplePerson> grid;
+    private Grid<Member> grid;
 
     private Filters filters;
-    private final SamplePersonService samplePersonService;
+    private final MemberService samplePersonService;
 
-    public MembersView(SamplePersonService SamplePersonService) {
+    public MembersView(MemberService SamplePersonService) {
         this.samplePersonService = SamplePersonService;
         setSizeFull();
         addClassNames("members-view");
@@ -84,7 +84,7 @@ public class MembersView extends Div {
         return mobileFilters;
     }
 
-    public static class Filters extends Div implements Specification<SamplePerson> {
+    public static class Filters extends Div implements Specification<Member> {
 
         private final TextField name = new TextField("Name");
         private final TextField phone = new TextField("Phone");
@@ -146,7 +146,7 @@ public class MembersView extends Div {
         }
 
         @Override
-        public Predicate toPredicate(Root<SamplePerson> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+        public Predicate toPredicate(Root<Member> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
             List<Predicate> predicates = new ArrayList<>();
 
             if (!name.isEmpty()) {
@@ -219,7 +219,7 @@ public class MembersView extends Div {
     }
 
     private Component createGrid() {
-        grid = new Grid<>(SamplePerson.class, false);
+        grid = new Grid<>(Member.class, false);
         grid.addColumn("firstName").setAutoWidth(true);
         grid.addColumn("lastName").setAutoWidth(true);
         grid.addColumn("email").setAutoWidth(true);
